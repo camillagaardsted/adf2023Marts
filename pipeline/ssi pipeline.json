@@ -54,7 +54,7 @@
 				"typeProperties": {
 					"variableName": "zipfilename",
 					"value": {
-						"value": "@substring(variables('webpageContent'),indexof(variables('webpageContent'),concat('overvaagningsdata-covid19-',variables('currentDate'),'-')),add(length(concat('overvaagningsdata-covid19-',variables('currentDate'),'-')),4))",
+						"value": "@substring(variables('webpageContent'),indexof(variables('webpageContent'),concat('overvaagningsdata-covid19-',variables('currentDate'),'-')),add(length(concat('overvaagningsdata-covid19-',variables('currentDate'),'-')),32))",
 						"type": "Expression"
 					}
 				}
