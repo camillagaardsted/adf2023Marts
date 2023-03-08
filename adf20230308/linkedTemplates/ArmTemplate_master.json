@@ -7,6 +7,10 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf20230308"
 		},
+		"Databricks_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'Databricks'"
+		},
 		"Voresdatalake_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://datalake20230306.dfs.core.windows.net/"
@@ -41,6 +45,9 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					},
+					"Databricks_accessToken": {
+						"value": "[parameters('Databricks_accessToken')]"
 					},
 					"Voresdatalake_properties_typeProperties_url": {
 						"value": "[parameters('Voresdatalake_properties_typeProperties_url')]"

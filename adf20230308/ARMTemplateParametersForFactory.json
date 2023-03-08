@@ -5,6 +5,9 @@
 		"factoryName": {
 			"value": "adf20230308"
 		},
+		"Databricks_accessToken": {
+			"value": ""
+		},
 		"Voresdatalake_properties_typeProperties_url": {
 			"value": "https://datalake20230306.dfs.core.windows.net/"
 		},
