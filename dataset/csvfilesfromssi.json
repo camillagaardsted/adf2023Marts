@@ -1,0 +1,18 @@
+{
+	"name": "csvfilesfromssi",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Voresdatalake",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": "covid19dk"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

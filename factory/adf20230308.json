@@ -1,0 +1,9 @@
+{
+	"name": "adf20230308",
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "e4948227-7bae-4a56-86d8-5bf3fa82bb23",
+		"tenantId": "a4f53a3a-07f3-4804-ba59-e17c7db692ce"
+	}
+}

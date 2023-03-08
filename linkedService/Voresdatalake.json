@@ -1,0 +1,11 @@
+{
+	"name": "Voresdatalake",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://datalake20230306.dfs.core.windows.net/"
+		}
+	}
+}
