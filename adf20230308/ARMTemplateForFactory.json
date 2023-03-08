@@ -1,0 +1,545 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf20230308"
+		},
+		"Voresdatalake_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://datalake20230306.dfs.core.windows.net/"
+		},
+		"ssi web site_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://files.ssi.dk/covid19/overvagning/data/"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/Covid19 dataflow demo')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Transformer positive over tid",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dataflow1",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-03-08T10:24:28Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Pipe hent zipfil fra ssi')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Download zipfil til datalake container",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "BinarySource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "GET"
+								},
+								"formatSettings": {
+									"type": "BinaryReadSettings",
+									"compressionProperties": {
+										"type": "ZipDeflateReadSettings"
+									}
+								}
+							},
+							"sink": {
+								"type": "BinarySink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "zipfilefromssi",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "csvfilesfromssi",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-03-08T09:35:25Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/zipfilefromssi')]",
+				"[concat(variables('factoryId'), '/datasets/csvfilesfromssi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ssi pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get ssi web page",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://covid19.ssi.dk/overvagningsdata/download-fil-med-overvaagningdata",
+							"method": "GET",
+							"headers": {}
+						}
+					},
+					{
+						"name": "Set variable1",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Get ssi web page",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "webpageContent",
+							"value": {
+								"value": "@activity('Get ssi web page').output.Response",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set variable2",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set current date",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "zipfilename",
+							"value": {
+								"value": "@substring(variables('webpageContent'),indexof(variables('webpageContent'),concat('overvaagningsdata-covid19-',variables('currentDate'),'-')),add(length(concat('overvaagningsdata-covid19-',variables('currentDate'),'-')),32))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Copy data1",
+						"description": "test",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Set variable2",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "BinarySource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "GET"
+								},
+								"formatSettings": {
+									"type": "BinaryReadSettings",
+									"compressionProperties": {
+										"type": "ZipDeflateReadSettings"
+									}
+								}
+							},
+							"sink": {
+								"type": "BinarySink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "covid19zipfile",
+								"type": "DatasetReference",
+								"parameters": {
+									"dailyfilename": {
+										"value": "@variables('zipfilename')",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "csvfilesfromssi",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Set current date",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set variable1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "currentDate",
+							"value": {
+								"value": "@formatDateTime(adddays(utcnow(),-5),'ddMMyyyy')",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"webpageContent": {
+						"type": "String"
+					},
+					"zipfilename": {
+						"type": "String"
+					},
+					"currentDate": {
+						"type": "String",
+						"defaultValue": "12082021"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2021-08-13T08:36:00Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/covid19zipfile')]",
+				"[concat(variables('factoryId'), '/datasets/csvfilesfromssi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/covid19zipfile')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ssi web site",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"dailyfilename": {
+						"type": "string",
+						"defaultValue": "overvaagningsdata-covid19-11082021-vu5q"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": {
+							"value": "@dataset().dailyfilename",
+							"type": "Expression"
+						}
+					},
+					"compression": {
+						"type": "ZipDeflate",
+						"level": "Optimal"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ssi web site')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/csvfilesfromssi')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Voresdatalake",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "covid19dk"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Voresdatalake')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/positiveovertidfil')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Voresdatalake",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Test_pos_over_time.csv",
+						"folderPath": "overvaagningsdata-covid19-07032023-2a11046f83874394b0194fc38aec2f5f",
+						"fileSystem": "covid19dk"
+					},
+					"columnDelimiter": ";",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Date",
+						"type": "String"
+					},
+					{
+						"name": "NewPositive",
+						"type": "String"
+					},
+					{
+						"name": "NotPrevPos",
+						"type": "String"
+					},
+					{
+						"name": "PosPct",
+						"type": "String"
+					},
+					{
+						"name": "PrevPos",
+						"type": "String"
+					},
+					{
+						"name": "Tested",
+						"type": "String"
+					},
+					{
+						"name": "Tested_kumulativ",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Voresdatalake')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/zipfilefromssi')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ssi web site",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": "overvaagningsdata-covid19-07032023-2a11046f83874394b0194fc38aec2f5f"
+					},
+					"compression": {
+						"type": "ZipDeflate"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ssi web site')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Voresdatalake')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('Voresdatalake_properties_typeProperties_url')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ssi web site')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "HttpServer",
+				"typeProperties": {
+					"url": "[parameters('ssi web site_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "positiveovertidfil",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "Voresdatalake",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "filter1"
+						},
+						{
+							"name": "sort1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Date as string,",
+						"          NewPositive as integer '###.###',",
+						"          NotPrevPos as string,",
+						"          PosPct as string,",
+						"          PrevPos as string,",
+						"          Tested as string,",
+						"          Tested_kumulativ as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> source1",
+						"sort1 filter(like(Date,'%-%')) ~> filter1",
+						"source1 sort(asc(Date, true)) ~> sort1",
+						"filter1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'json',",
+						"     fileSystem: 'covid19dk',",
+						"     folderPath: 'json',",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/positiveovertidfil')]",
+				"[concat(variables('factoryId'), '/linkedServices/Voresdatalake')]"
+			]
+		}
+	]
+}

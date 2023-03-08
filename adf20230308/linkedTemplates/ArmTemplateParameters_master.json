@@ -1,0 +1,21 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf20230308"
+		},
+		"Voresdatalake_properties_typeProperties_url": {
+			"value": "https://datalake20230306.dfs.core.windows.net/"
+		},
+		"ssi web site_properties_typeProperties_url": {
+			"value": "https://files.ssi.dk/covid19/overvagning/data/"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
