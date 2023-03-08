@@ -80,6 +80,9 @@
 				"type": "Array"
 			},
 			"ListAllFiles": {
+				"type": "Boolean"
+			},
+			"ListOfFiles": {
 				"type": "String"
 			}
 		},
