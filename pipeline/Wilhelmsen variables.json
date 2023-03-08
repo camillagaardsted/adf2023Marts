@@ -89,12 +89,15 @@
 				}
 			}
 		],
+		"parameters": {
+			"ListAllFiles": {
+				"type": "bool",
+				"defaultValue": "False"
+			}
+		},
 		"variables": {
 			"Files": {
 				"type": "Array"
-			},
-			"ListAllFiles": {
-				"type": "Boolean"
 			},
 			"ListOfFiles": {
 				"type": "String"
