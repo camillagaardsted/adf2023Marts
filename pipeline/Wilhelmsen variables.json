@@ -34,7 +34,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@variables('ListAllFiles')",
+						"value": "@pipeline().parameters.ListAllFiles",
 						"type": "Expression"
 					},
 					"ifTrueActivities": [
