@@ -83,7 +83,7 @@
 				"typeProperties": {
 					"variableName": "ListOfFiles",
 					"value": {
-						"value": "Load @length(variables('ListOfFiles')) files @join(variables('Files'),',')",
+						"value": "Load @{length(variables('Files'))} files @{join(variables('Files'),',')}",
 						"type": "Expression"
 					}
 				}
