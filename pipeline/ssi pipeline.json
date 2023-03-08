@@ -20,7 +20,7 @@
 				}
 			},
 			{
-				"name": "Set variable1",
+				"name": "set web page content",
 				"type": "SetVariable",
 				"dependsOn": [
 					{
@@ -125,7 +125,7 @@
 				"type": "SetVariable",
 				"dependsOn": [
 					{
-						"activity": "Set variable1",
+						"activity": "set web page content",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -135,7 +135,7 @@
 				"typeProperties": {
 					"variableName": "currentDate",
 					"value": {
-						"value": "@formatDateTime(adddays(utcnow(),-5),'ddMMyyyy')",
+						"value": "@formatDateTime(adddays(utcnow(),-6),'ddMMyyyy')",
 						"type": "Expression"
 					}
 				}
